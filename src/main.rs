@@ -1,4 +1,4 @@
-use std::io::{stdin, Write, BufRead, BufReader, BufWriter};
+use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
 use colored::Colorize;
@@ -23,20 +23,37 @@ fn get_user_file() -> path::PathBuf {
 }
 
 fn get_category() -> String {
-    let categories = ["alchemy_and_equipment", "camera", "characters", "combat", "gameplay", "quests_and_adventures", "user_interface", "visuals_and_graphics", "miscellaneous"];
+    let categories = [
+        "alchemy_and_equipment",
+        "camera",
+        "characters",
+        "combat",
+        "gameplay",
+        "quests_and_adventures",
+        "user_interface",
+        "visuals_and_graphics",
+        "miscellaneous",
+    ];
     let mut count = 1;
     for category in categories {
         println!("{}. {}", count, category);
         count += 1;
     }
-    
-    println!("{}", "Please select a category by entering the corresponding number:".green());
+
+    println!(
+        "{}",
+        "Please select a category by entering the corresponding number:".green()
+    );
     let mut c = String::new();
     stdin().read_line(&mut c).unwrap();
     c = c.trim().to_string();
     let category: usize = c.parse::<usize>().unwrap();
-    println!("category chosen is {}: {}", category, categories[category-1]);
-    return categories[category-1].to_string();
+    println!(
+        "category chosen is {}: {}",
+        category,
+        categories[category - 1]
+    );
+    return categories[category - 1].to_string();
 }
 
 fn main() {
@@ -46,44 +63,46 @@ fn main() {
     }
 
     // get the user's file
+    println!("{}", "Enter the name of the file: ".green());
     let user_file = get_user_file();
     println!("User file: {:?}", user_file);
-    
+
     let path = path::Path::new(&user_file);
-    
+
     // Try opening the file, panic if fails.
     let file = match fs::File::open(&path) {
         Err(why) => panic!("Couldn't open {:?}: {}", path, why),
-        Ok(file) => file
+        Ok(file) => file,
     };
-    
+
     println!("File opened successfully");
-    
+
     // Get the category the user wants to add to.
     let category = get_category();
-    
+
     // Read the file into a buffer to edit.
     // Using BufReader, more efficient when reading line by line.
     // Better in this case, bc end goal is to see if a certain line contains 'Mods...'
     let file = BufReader::new(file);
-    
+
     // When adding to a category, category is always added right after 'Mods.'
     // The sequence is unique, so we can use it to find the line we want to edit.
     let sequence = "Mods.";
     let rep = format!("{}{}", sequence, category);
-    
+
     // We'll write to a temp file, then overwrite the original file with the temp file.
     let tmp_path = format!("{}.tmp", path.display());
     let tmp_file = fs::File::create(tmp_path).expect("Unable to create file");
-    
+
     // do the same thing as above, but BufWriter instead of BufReader
     let mut tmp_file = BufWriter::new(tmp_file);
-    
+
     for line in file.lines() {
         let line = line.expect("Unable to read line");
         let mut new_line = line.replace(sequence, &rep);
-        new_line.push('\n'); // new line char gets removed for some reason? not sure why. 
-        tmp_file.write_all(new_line.as_bytes()).expect("Unable to write data")
+        new_line.push('\n'); // new line char gets removed for some reason? not sure why.
+        tmp_file
+            .write_all(new_line.as_bytes())
+            .expect("Unable to write data")
     }
-    
 }
