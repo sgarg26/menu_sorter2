@@ -47,7 +47,7 @@ fn get_category() -> String {
     let mut c = String::new();
     stdin().read_line(&mut c).unwrap();
     c = c.trim().to_string();
-    let category: usize = c.parse::<usize>().unwrap();
+    let category: usize = c.parse::<usize>().unwrap(); // usize bc can't index arrays with i32
     println!(
         "category chosen is {}: {}",
         category,
@@ -88,7 +88,7 @@ fn main() {
     // When adding to a category, category is always added right after 'Mods.'
     // The sequence is unique, so we can use it to find the line we want to edit.
     let sequence = "Mods.";
-    let rep = format!("{}{}", sequence, category);
+    let rep = format!("{}{}.", sequence, category);
 
     // We'll write to a temp file, then overwrite the original file with the temp file.
     let tmp_path = format!("{}.tmp", path.display());
