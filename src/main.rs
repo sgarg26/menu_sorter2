@@ -20,7 +20,7 @@ fn get_user_file() -> path::PathBuf {
     path.to_path_buf()
 }
 
-fn check_exists(file: path::PathBuf) -> bool {
+fn check_exists(file: &path::PathBuf) -> bool {
     if !file.exists() {
         println!("File {:?} does not exist!", file);
         return false;
@@ -38,10 +38,12 @@ fn main() {
     let user_file = get_user_file();
     println!("User file: {:?}", user_file);
     
-    // check if the file exists
-    if !check_exists(user_file) {
-        process::exit(1);
-    }
+    let path = path::Path::new(&user_file);
     
-    println!("Hello")
+    let mut file = match fs::File::open(&path) {
+        Err(why) => panic!("Couldn't open {:?}: {}", path, why),
+        Ok(file) => file
+    };
+    
+    println!("File opened successfully")
 }
