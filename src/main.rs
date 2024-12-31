@@ -1,4 +1,4 @@
-use std::io::{BufReader, BufRead, stdin};
+use std::io::{stdin, Write, BufRead, BufReader, BufWriter};
 use std::{env, fs, path, process};
 
 const DEBUG: bool = true;
@@ -33,7 +33,7 @@ fn main() {
     let path = path::Path::new(&user_file);
     
     // Try opening the file, panic if fails.
-    let mut file = match fs::File::open(&path) {
+    let file = match fs::File::open(&path) {
         Err(why) => panic!("Couldn't open {:?}: {}", path, why),
         Ok(file) => file
     };
@@ -45,9 +45,22 @@ fn main() {
     // Better in this case, bc end goal is to see if a certain line contains 'Mods...'
     let file = BufReader::new(file);
     
+    // When adding to a category, category is always added right after 'Mods.'
+    // The sequence is unique, so we can use it to find the line we want to edit.
+    let sequence = "Mods.";
+    
+    // We'll write to a temp file, then overwrite the original file with the temp file.
+    let tmp_path = format!("{}.tmp", path.display());
+    let tmp_file = fs::File::create(tmp_path).expect("Unable to create file");
+    
+    // do the same thing as above, but BufWriter instead of BufReader
+    let mut tmp_file = BufWriter::new(tmp_file);
+    
     for line in file.lines() {
         let line = line.expect("Unable to read line");
-        println!("{}", line);
+        let mut new_line = line.replace(sequence, "Mods.camera.");
+        new_line.push('\n'); // new line char gets removed for some reason? not sure why. 
+        tmp_file.write_all(new_line.as_bytes()).expect("Unable to write data")
     }
     
 }
