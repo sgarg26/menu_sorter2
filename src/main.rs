@@ -2,6 +2,7 @@ use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
 use colored::Colorize;
+use walkdir::{DirEntry, WalkDir};
 
 const DEBUG: bool = true;
 
@@ -56,12 +57,35 @@ fn get_category() -> String {
     return categories[category - 1].to_string();
 }
 
+// Code adapted from https://github.com/BurntSushi/walkdir
+fn is_xml(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.ends_with("xml"))
+        .unwrap_or(false)
+}
+
+fn get_file() {
+    // let walker = WalkDir::new("./").into_iter();
+    for entry in WalkDir::new("./") {
+        let entry = entry.unwrap();
+        if is_xml(&entry) {
+            println!("{}", entry.path().display());
+        }
+    }
+    // for entry in walker.filter_entry(|e| is_xml(e)) {
+    //     let entry = entry.unwrap();
+    //     println!("{}", entry.path().display());
+    // }
+}
+
 fn main() {
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
         process::exit(1);
     }
-
+    get_file();
     // get the user's file
     println!("{}", "Enter the name of the file: ".green());
     let user_file = get_user_file();
@@ -76,7 +100,6 @@ fn main() {
     };
 
     println!("File opened successfully");
-
     // Get the category the user wants to add to.
     let category = get_category();
 
