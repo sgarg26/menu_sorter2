@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::io::{BufReader, BufRead, stdin};
 use std::{env, fs, path, process};
 
 const DEBUG: bool = true;
@@ -20,14 +20,6 @@ fn get_user_file() -> path::PathBuf {
     path.to_path_buf()
 }
 
-fn check_exists(file: &path::PathBuf) -> bool {
-    if !file.exists() {
-        println!("File {:?} does not exist!", file);
-        return false;
-    }
-    true
-}
-
 fn main() {
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
@@ -40,10 +32,22 @@ fn main() {
     
     let path = path::Path::new(&user_file);
     
+    // Try opening the file, panic if fails.
     let mut file = match fs::File::open(&path) {
         Err(why) => panic!("Couldn't open {:?}: {}", path, why),
         Ok(file) => file
     };
     
-    println!("File opened successfully")
+    println!("File opened successfully");
+    
+    // Read the file into a buffer to edit.
+    // Using BufReader, more efficient when reading line by line.
+    // Better in this case, bc end goal is to see if a certain line contains 'Mods...'
+    let file = BufReader::new(file);
+    
+    for line in file.lines() {
+        let line = line.expect("Unable to read line");
+        println!("{}", line);
+    }
+    
 }
