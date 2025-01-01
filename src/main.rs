@@ -75,13 +75,20 @@ fn get_file() -> PathBuf {
         count += 1;
     }
 
-    // Get the file user wants
-    println!("{}", "Enter the index of the file: ".green());
-    let mut c = String::new();
-    stdin().read_line(&mut c).unwrap();
-    c = c.trim().to_string();
-    let file = c.parse::<usize>().unwrap();
-    return files[file - 1].clone();
+    loop {
+        let mut c = String::new();
+        println!(
+            "{} {}",
+            "Enter file index between 1 and".green(),
+            files.len()
+        );
+        stdin().read_line(&mut c).unwrap();
+        c = c.trim().to_string();
+        let file = c.parse::<usize>().unwrap();
+        if file > 0 && file <= files.len() {
+            return files[file - 1].clone();
+        }
+    }
 }
 
 fn main() {
@@ -89,7 +96,7 @@ fn main() {
     if !DEBUG && !check_cwd() {
         process::exit(1);
     }
-    // get_file();
+
     // get the user's file
     let user_file = get_file();
     println!("User file: {:?}", user_file);
@@ -131,4 +138,5 @@ fn main() {
             .write_all(new_line.as_bytes())
             .expect("Unable to write data")
     }
+    //TODO: rename tmp file to permanent file later.
 }
