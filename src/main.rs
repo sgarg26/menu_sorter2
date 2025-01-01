@@ -1,3 +1,4 @@
+use path::PathBuf;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
@@ -66,16 +67,29 @@ fn is_xml(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
-fn get_file() {
+fn get_file() -> PathBuf {
+    let mut count = 1;
     // Can't use filter_entry bc it's used to filter directories.
     // Use filter map to get rid of Option and then chain filter to get only the xml files.
-    for entry in WalkDir::new("./")
+    let files: Vec<PathBuf> = WalkDir::new("./")
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| is_xml(e))
-    {
-        println!("{}", entry.path().display())
+        .map(|e| e.path().to_path_buf())
+        .collect();
+
+    for file in &files {
+        println!("{}: {}", count, file.display());
+        count += 1;
     }
+
+    // Get the file user wants
+    println!("{}", "Enter the index of the file: ".green());
+    let mut c = String::new();
+    stdin().read_line(&mut c).unwrap();
+    c = c.trim().to_string();
+    let file = c.parse::<usize>().unwrap();
+    return files[file - 1].clone();
 }
 
 fn main() {
@@ -83,10 +97,9 @@ fn main() {
     if !DEBUG && !check_cwd() {
         process::exit(1);
     }
-    get_file();
+    // get_file();
     // get the user's file
-    println!("{}", "Enter the name of the file: ".green());
-    let user_file = get_user_file();
+    let user_file = get_file();
     println!("User file: {:?}", user_file);
 
     let path = path::Path::new(&user_file);
