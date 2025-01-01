@@ -16,14 +16,6 @@ fn check_cwd() -> bool {
     true
 }
 
-fn get_user_file() -> path::PathBuf {
-    let mut buffer = String::new();
-    stdin().read_line(&mut buffer).unwrap();
-    buffer = buffer.trim().to_string();
-    let path = path::Path::new(&buffer);
-    path.to_path_buf()
-}
-
 fn get_category() -> String {
     let categories = [
         "alchemy_and_equipment",
