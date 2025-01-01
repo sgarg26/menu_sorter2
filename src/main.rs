@@ -42,8 +42,11 @@ fn get_category() -> String {
         let mut c = String::new();
         stdin().read_line(&mut c).unwrap();
         c = c.trim().to_string();
-        let category: usize = c.parse::<usize>().unwrap();
-        if category > 0 && category < categories.len() {
+        let category: usize = match c.parse::<usize>() {
+            Ok(num) => num,
+            Err(_) => continue,
+        };
+        if category > 0 && category <= categories.len() {
             return categories[category - 1].to_string();
         }
     }
