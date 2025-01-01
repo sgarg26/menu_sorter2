@@ -67,17 +67,15 @@ fn is_xml(entry: &DirEntry) -> bool {
 }
 
 fn get_file() {
-    // let walker = WalkDir::new("./").into_iter();
-    for entry in WalkDir::new("./") {
-        let entry = entry.unwrap();
-        if is_xml(&entry) {
-            println!("{}", entry.path().display());
-        }
+    // Can't use filter_entry bc it's used to filter directories.
+    // Use filter map to get rid of Option and then chain filter to get only the xml files.
+    for entry in WalkDir::new("./")
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| is_xml(e))
+    {
+        println!("{}", entry.path().display())
     }
-    // for entry in walker.filter_entry(|e| is_xml(e)) {
-    //     let entry = entry.unwrap();
-    //     println!("{}", entry.path().display());
-    // }
 }
 
 fn main() {
