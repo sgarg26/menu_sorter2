@@ -1,4 +1,5 @@
 use path::PathBuf;
+use std::collections::HashSet;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
@@ -61,6 +62,28 @@ fn is_xml(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
+fn is_settings_file(entry: &DirEntry) -> bool {
+    // the settings files provided by CDPR are probably not want users want to place in other directories.
+    let settings_files = HashSet::from([
+        "audio.xml",
+        "display.xml",
+        "gameplay.xml",
+        "gamma.xml",
+        "graphics.xml",
+        "graphicsdx11.xml",
+        "hud.xml",
+        "hidden.xml",
+        "hdr.xml",
+        "input.xml",
+    ]);
+
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| settings_files.contains(s))
+        .unwrap_or(false)
+}
+
 fn get_file() -> PathBuf {
     let mut count = 1;
     // Can't use filter_entry bc it's used to filter directories.
@@ -68,7 +91,7 @@ fn get_file() -> PathBuf {
     let files: Vec<PathBuf> = WalkDir::new("./")
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| is_xml(e))
+        .filter(|e| is_xml(e) && !is_settings_file(e))
         .map(|e| e.path().to_path_buf())
         .collect();
 
