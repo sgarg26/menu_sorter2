@@ -34,20 +34,19 @@ fn get_category() -> String {
         count += 1;
     }
 
-    println!(
-        "{}",
-        "Please select a category by entering the corresponding number:".green()
-    );
-    let mut c = String::new();
-    stdin().read_line(&mut c).unwrap();
-    c = c.trim().to_string();
-    let category: usize = c.parse::<usize>().unwrap(); // usize bc can't index arrays with i32
-    println!(
-        "category chosen is {}: {}",
-        category,
-        categories[category - 1]
-    );
-    return categories[category - 1].to_string();
+    loop {
+        println!(
+            "{}",
+            "Please select a category by entering the corresponding number:".green()
+        );
+        let mut c = String::new();
+        stdin().read_line(&mut c).unwrap();
+        c = c.trim().to_string();
+        let category: usize = c.parse::<usize>().unwrap();
+        if category > 0 && category < categories.len() {
+            return categories[category - 1].to_string();
+        }
+    }
 }
 
 // Code adapted from https://github.com/BurntSushi/walkdir
