@@ -2,9 +2,9 @@ name: Main
 
 # Workflow to build for tag pushes.
 on:
-  push
-  # tags:
-  #   - "v*"
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -14,5 +14,6 @@ jobs:
       - run: cargo build --release
       - name: Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: target/release/menu_sorter.exe
