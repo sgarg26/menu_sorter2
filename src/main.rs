@@ -1,6 +1,7 @@
 use path::PathBuf;
 use std::collections::HashSet;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
+use std::task::Wake;
 use std::{env, fs, path, process};
 
 use colored::Colorize;
@@ -111,7 +112,7 @@ fn get_file() -> PathBuf {
         c = c.trim().to_string();
         let file = match c.parse::<usize>() {
             Ok(num) => num,
-            Err(_) => continue
+            Err(_) => continue,
         };
         if file > 0 && file <= files.len() {
             return files[file - 1].clone();
@@ -166,5 +167,6 @@ fn main() {
             .write_all(new_line.as_bytes())
             .expect("Unable to write data")
     }
-    //TODO: rename tmp file to permanent file later.
+    // Rename tmp file to permanent file later.
+    fs::rename(format!("{}.tmp", path.display()), path).expect("Unable to rename temp file");
 }
