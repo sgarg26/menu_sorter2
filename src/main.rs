@@ -1,7 +1,6 @@
 use path::PathBuf;
 use std::collections::HashSet;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
-use std::task::Wake;
 use std::{env, fs, path, process};
 
 use colored::Colorize;
