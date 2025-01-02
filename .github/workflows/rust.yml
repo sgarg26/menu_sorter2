@@ -11,8 +11,5 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - run: rustup update
       - run: cargo build --release
-      - uses: actions/upload-artifact@v4
-        with:
-          path: target/release/menu_sorter.exe
+    
