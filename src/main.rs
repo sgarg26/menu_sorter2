@@ -105,11 +105,14 @@ fn get_file() -> PathBuf {
         println!(
             "{} {}",
             "Enter file index between 1 and".green(),
-            files.len()
+            files.len().to_string().green()
         );
         stdin().read_line(&mut c).unwrap();
         c = c.trim().to_string();
-        let file = c.parse::<usize>().unwrap();
+        let file = match c.parse::<usize>() {
+            Ok(num) => num,
+            Err(_) => continue
+        };
         if file > 0 && file <= files.len() {
             return files[file - 1].clone();
         }
