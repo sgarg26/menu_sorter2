@@ -4,15 +4,17 @@ use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
 use colored::Colorize;
-use walkdir::{DirEntry, WalkDir};
 use rusqlite::{Connection, Result};
+use walkdir::{DirEntry, WalkDir};
+
+use menu_sorter::init_scan;
 
 const DEBUG: bool = true;
 
 #[derive(Debug)]
 struct FileCategory {
     file_name: String,
-    category: String
+    category: String,
 }
 
 fn check_cwd() -> bool {
@@ -127,7 +129,7 @@ fn get_file() -> PathBuf {
 }
 
 fn open_db() -> Connection {
-    let conn = match Connection::open("configuration.db3"){
+    let conn = match Connection::open("config.db3") {
         Ok(conn) => conn,
         Err(e) => {
             println!("Error opening database: {:?}", e);
@@ -135,10 +137,30 @@ fn open_db() -> Connection {
         }
     };
 
+    let query = "
+    CREATE TABLE IF NOT EXISTS config (
+        file_name VARCHAR PRIMARY KEY,
+        category VARCHAR NOT NULL
+    )
+    ";
+
+    conn.execute(query, []).expect("Unable to create table");
+
     conn
 }
 
 fn main() {
+    let scan_needed = if path::Path::new("config.db3").exists() {
+        false
+    } else {
+        true
+    };
+    let conn = open_db();
+
+    if scan_needed {
+        init_scan(&conn);
+    }
+
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
         process::exit(1);
