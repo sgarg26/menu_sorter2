@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 colored = "2.2.0"
 walkdir = "2"
+rusqlite = { version = "0.32.0", features = ["bundled"] }
