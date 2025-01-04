@@ -5,8 +5,15 @@ use std::{env, fs, path, process};
 
 use colored::Colorize;
 use walkdir::{DirEntry, WalkDir};
+use rusqlite::{Connection, Result};
 
 const DEBUG: bool = true;
+
+#[derive(Debug)]
+struct FileCategory {
+    file_name: String,
+    category: String
+}
 
 fn check_cwd() -> bool {
     let cwd = env::current_dir().unwrap().to_path_buf();
