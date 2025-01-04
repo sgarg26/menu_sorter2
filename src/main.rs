@@ -126,6 +126,18 @@ fn get_file() -> PathBuf {
     }
 }
 
+fn open_db() -> Connection {
+    let conn = match Connection::open("configuration.db3"){
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error opening database: {:?}", e);
+            process::exit(1);
+        }
+    };
+
+    conn
+}
+
 fn main() {
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
