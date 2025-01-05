@@ -7,13 +7,9 @@ use walkdir::{DirEntry, WalkDir};
 
 use rusqlite::{Connection, Result};
 
-fn is_xml(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.ends_with("xml"))
-        .unwrap_or(false)
-}
+mod utils;
+use utils::*;
+
 
 fn scan_dir(conn: &Connection) {
     let categories = [
