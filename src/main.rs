@@ -5,6 +5,7 @@ use std::{env, fs, path, process};
 
 use colored::Colorize;
 use walkdir::{DirEntry, WalkDir};
+use configparser::ini::Ini;
 
 const DEBUG: bool = true;
 
@@ -120,6 +121,20 @@ fn get_file() -> PathBuf {
 }
 
 fn main() {
+    let mut config = Ini::new();
+    let map = match config.load("menu_sorter.ini") {
+        Ok(map) => {
+            println!("File found!");
+            map
+        }
+
+        Err(_) => {
+            println!("Welcome to the Rust Menu Sorter!");
+            fs::File::create("menu_sorter.ini").unwrap();
+            return;
+        }
+    };
+
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
         process::exit(1);
