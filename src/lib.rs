@@ -3,9 +3,9 @@ use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
 };
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
-use rusqlite::{Connection, Result};
+use rusqlite::Connection;
 
 mod utils;
 use utils::*;

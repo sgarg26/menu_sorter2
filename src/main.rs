@@ -1,11 +1,11 @@
 use path::PathBuf;
-use std::collections::HashSet;
+use std::fs::File;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
-use std::{env, fs, path, process};
+use std::{fs, path, process};
 
 use colored::Colorize;
-use rusqlite::{Connection, Result};
-use walkdir::{DirEntry, WalkDir};
+use rusqlite::Connection;
+use walkdir::WalkDir;
 
 use menu_sorter::init_scan;
 
@@ -19,7 +19,6 @@ struct FileCategory {
     file_name: String,
     category: String,
 }
-
 
 
 fn get_category() -> String {
@@ -118,7 +117,24 @@ fn open_db() -> Connection {
     conn
 }
 
+fn update_db(conn: &Connection, file: &str, category: &str) {
+    let mut stmt = conn.prepare("SELECT file_name, category FROM config WHERE file_name = (?1)").unwrap();
+    let result_iter = stmt.query_map([], |row| {
+        Ok(FileCategory {
+            file_name: row.get(0).unwrap(),
+            category: row.get(1).unwrap(),
+        })
+    }).unwrap();
+
+    let mut exists = false;
+    for result in result_iter {
+        let result = result.unwrap();
+    }
+}
+
 fn main() {
+
+    // If first usage, already annotated files need to be added to the db.
     let scan_needed = if path::Path::new("config.db3").exists() {
         false
     } else {
@@ -150,6 +166,9 @@ fn main() {
     println!("File opened successfully");
     // Get the category the user wants to add to.
     let category = get_category();
+
+    // Update the database with the new category.
+    update_db(&conn, &user_file.to_str().unwrap(), &category);
 
     // Read the file into a buffer to edit.
     // Using BufReader, more efficient when reading line by line.
