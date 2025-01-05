@@ -120,20 +120,28 @@ fn get_file() -> PathBuf {
     }
 }
 
+//    let mut config = Ini::new();
+//    let map = config.load("src/config.ini").unwrap();
+//
+//    // for (key, value) in map.iter() {
+//    //     println!("{}: {:?}", key, value);
+//    // }
+//
+//    let val = map.get("file").unwrap();
+//    // println!("{:?}", val.get("autohide.xml").unwrap());
+//
+//    for (k, v) in val.iter() {
+//        println!("{}: {:?}", k, v);
+//    }
+
 fn main() {
     let mut config = Ini::new();
-    let map = match config.load("menu_sorter.ini") {
-        Ok(map) => {
-            println!("File found!");
-            map
-        }
+    if !path::Path::new("menu_sorter.ini").exists() {
+        fs::File::create("menu_sorter.ini").unwrap();
+    }
 
-        Err(_) => {
-            println!("Welcome to the Rust Menu Sorter!");
-            fs::File::create("menu_sorter.ini").unwrap();
-            return;
-        }
-    };
+    let map = config.load("menu_sorter.ini");
+
 
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
