@@ -1,11 +1,15 @@
 use path::PathBuf;
-use std::collections::HashSet;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
 use colored::Colorize;
-use walkdir::{DirEntry, WalkDir};
 use configparser::ini::Ini;
+use walkdir::{DirEntry, WalkDir};
+
+use menu_sorter::init_scan;
+
+mod utils;
+use utils::{is_settings_file, is_xml};
 
 const DEBUG: bool = true;
 
@@ -52,37 +56,6 @@ fn get_category() -> String {
             return categories[category - 1].to_string();
         }
     }
-}
-
-// Code adapted from https://github.com/BurntSushi/walkdir
-fn is_xml(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.ends_with("xml"))
-        .unwrap_or(false)
-}
-
-fn is_settings_file(entry: &DirEntry) -> bool {
-    // the settings files provided by CDPR are probably not want users want to place in other directories.
-    let settings_files = HashSet::from([
-        "audio.xml",
-        "display.xml",
-        "gameplay.xml",
-        "gamma.xml",
-        "graphics.xml",
-        "graphicsdx11.xml",
-        "hud.xml",
-        "hidden.xml",
-        "hdr.xml",
-        "input.xml",
-    ]);
-
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| settings_files.contains(s))
-        .unwrap_or(false)
 }
 
 fn get_file() -> PathBuf {
@@ -136,12 +109,10 @@ fn get_file() -> PathBuf {
 
 fn main() {
     let mut config = Ini::new();
-    if !path::Path::new("menu_sorter.ini").exists() {
-        fs::File::create("menu_sorter.ini").unwrap();
+    if !path::Path::new("./menu_sorter.ini").exists() {
+        fs::File::create("./menu_sorter.ini").unwrap();
+        init_scan(&mut config);
     }
-
-    let map = config.load("menu_sorter.ini");
-
 
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
