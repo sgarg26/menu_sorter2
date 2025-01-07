@@ -100,7 +100,7 @@ fn get_file() -> PathBuf {
 fn main() {
     // For debug purposes. Ignore.
     if DEBUG {
-        // env::set_current_dir("./src").expect("Something went wrong");
+        env::set_current_dir("./src").expect("Something went wrong");
     }
     let mut config = Ini::new();
     // If first time using the app, scan the directory, and
