@@ -11,7 +11,7 @@ use menu_sorter::init_scan;
 mod utils;
 use utils::{is_settings_file, is_xml};
 
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 fn check_cwd() -> bool {
     let cwd = env::current_dir().unwrap().to_path_buf();
@@ -75,6 +75,10 @@ fn get_file() -> PathBuf {
     }
 
     loop {
+        if files.is_empty() {
+            println!("No files found. Exiting.");
+            process::exit(0);
+        }
         let mut c = String::new();
         println!(
             "{} {}",
@@ -96,7 +100,7 @@ fn get_file() -> PathBuf {
 fn main() {
     // For debug purposes. Ignore.
     if DEBUG {
-        env::set_current_dir("./src").expect("Something went wrong");
+        // env::set_current_dir("./src").expect("Something went wrong");
     }
     let mut config = Ini::new();
     // If first time using the app, scan the directory, and

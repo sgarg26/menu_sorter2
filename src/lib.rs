@@ -39,6 +39,7 @@ fn get_category_from_file(entry: &File) -> Option<String> {
 }
 
 pub fn init_scan(config: &mut Ini) {
+    let mut valid_files_found = false;
     let files: Vec<PathBuf> = WalkDir::new("./")
         .into_iter()
         .filter_map(|e| e.ok())
@@ -48,6 +49,7 @@ pub fn init_scan(config: &mut Ini) {
 
     for file in files {
         let category = get_category_from_file(&File::open(&file).unwrap());
+        valid_files_found = true;
         if category.is_some() {
             config.set(
                 "files",
@@ -57,7 +59,9 @@ pub fn init_scan(config: &mut Ini) {
         }
     }
     let write_options = WriteOptions::new_with_params(true, 2, 1);
-    config
-        .pretty_write("menu_sorter.ini", &write_options)
-        .unwrap();
+    if valid_files_found {
+        config
+            .pretty_write("menu_sorter.ini", &write_options)
+            .unwrap()
+    };
 }
