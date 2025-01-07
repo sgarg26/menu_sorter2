@@ -94,7 +94,7 @@ fn get_file() -> PathBuf {
 }
 
 fn main() {
-    // env::set_current_dir("./src").expect("Something went wrong");
+    if DEBUG { env::set_current_dir("./src").expect("Something went wrong"); }
     let mut config = Ini::new();
     // If first time using the app, scan the directory, and
     // add all currently existing files and their categories
@@ -120,16 +120,19 @@ fn main() {
 
     // get the user's file
     let user_file = get_file();
-    let mut trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
+    let trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
     let trimmed_user_file = &trimmed_user_file.to_string().to_lowercase();
     println!("User file: {:?}", trimmed_user_file);
     if file_list.contains_key(trimmed_user_file) {
-        let old_category = file_list
+        old_category = file_list
             .get(trimmed_user_file)
             .unwrap()
             .to_owned()
             .unwrap(); // kill me
-        println!("{:?} with category {} found.", trimmed_user_file, old_category);
+        println!(
+            "{:?} with category {} found.",
+            trimmed_user_file, old_category
+        );
         file_contains_category = true;
     }
 
@@ -153,9 +156,14 @@ fn main() {
     // When adding to a category, category is always added right after 'Mods.'
     // The sequence is unique, so we can use it to find the line we want to edit.
     let sequence = "Mods.";
-    let mut rep_with = format!("{}{}.", sequence, category);
+    let rep_with = format!("{}{}.", sequence, category);
+    let mut rep_from = String::new();
     if file_contains_category {
-        // rep_from = format!("{}{}.", sequence,)
+        rep_from = format!("{}{}.", sequence, old_category);
+        if rep_from == rep_with {
+            println!("Category already exists. No changes needed. Exiting.");
+            process::exit(0);
+        }
     }
 
     // We'll write to a temp file, then overwrite the original file with the temp file.
