@@ -94,6 +94,7 @@ fn get_file() -> PathBuf {
 }
 
 fn main() {
+    // env::set_current_dir("./src").expect("Something went wrong");
     let mut config = Ini::new();
     // If first time using the app, scan the directory, and
     // add all currently existing files and their categories
@@ -112,12 +113,24 @@ fn main() {
         process::exit(1);
     }
 
+    // bool to check if the file contains a category already
+    // if it does, that needs to be replaced w the new category (or not)
+    let mut file_contains_category = false;
+    let mut old_category = String::new();
+
     // get the user's file
     let user_file = get_file();
-    let trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
-    println!("User file: {:?}", user_file);
+    let mut trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
+    let trimmed_user_file = &trimmed_user_file.to_string().to_lowercase();
+    println!("User file: {:?}", trimmed_user_file);
     if file_list.contains_key(trimmed_user_file) {
-        println!("{:?} with category {:?} found.", user_file, map.get(trimmed_user_file).unwrap());
+        let old_category = file_list
+            .get(trimmed_user_file)
+            .unwrap()
+            .to_owned()
+            .unwrap(); // kill me
+        println!("{:?} with category {} found.", trimmed_user_file, old_category);
+        file_contains_category = true;
     }
 
     let path = path::Path::new(&user_file);
@@ -140,7 +153,10 @@ fn main() {
     // When adding to a category, category is always added right after 'Mods.'
     // The sequence is unique, so we can use it to find the line we want to edit.
     let sequence = "Mods.";
-    let rep = format!("{}{}.", sequence, category);
+    let mut rep_with = format!("{}{}.", sequence, category);
+    if file_contains_category {
+        // rep_from = format!("{}{}.", sequence,)
+    }
 
     // We'll write to a temp file, then overwrite the original file with the temp file.
     let tmp_path = format!("{}.tmp", path.display());
@@ -151,7 +167,7 @@ fn main() {
 
     for line in file.lines() {
         let line = line.expect("Unable to read line");
-        let mut new_line = line.replace(sequence, &rep);
+        let mut new_line = line.replace(sequence, &rep_with);
         new_line.push('\n'); // new line char gets removed for some reason? not sure why.
         tmp_file
             .write_all(new_line.as_bytes())
