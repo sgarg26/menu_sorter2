@@ -11,7 +11,7 @@ use menu_sorter::init_scan;
 mod utils;
 use utils::{is_settings_file, is_xml};
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 fn check_cwd() -> bool {
     let cwd = env::current_dir().unwrap().to_path_buf();
