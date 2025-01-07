@@ -1,10 +1,15 @@
 use path::PathBuf;
-use std::collections::HashSet;
 use std::io::{stdin, BufRead, BufReader, BufWriter, Write};
 use std::{env, fs, path, process};
 
 use colored::Colorize;
-use walkdir::{DirEntry, WalkDir};
+use configparser::ini::Ini;
+use walkdir::WalkDir;
+
+use menu_sorter::init_scan;
+
+mod utils;
+use utils::{is_settings_file, is_xml};
 
 const DEBUG: bool = true;
 
@@ -53,37 +58,6 @@ fn get_category() -> String {
     }
 }
 
-// Code adapted from https://github.com/BurntSushi/walkdir
-fn is_xml(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.ends_with("xml"))
-        .unwrap_or(false)
-}
-
-fn is_settings_file(entry: &DirEntry) -> bool {
-    // the settings files provided by CDPR are probably not want users want to place in other directories.
-    let settings_files = HashSet::from([
-        "audio.xml",
-        "display.xml",
-        "gameplay.xml",
-        "gamma.xml",
-        "graphics.xml",
-        "graphicsdx11.xml",
-        "hud.xml",
-        "hidden.xml",
-        "hdr.xml",
-        "input.xml",
-    ]);
-
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| settings_files.contains(s))
-        .unwrap_or(false)
-}
-
 fn get_file() -> PathBuf {
     let mut count = 1;
     // Can't use filter_entry bc it's used to filter directories.
@@ -96,7 +70,7 @@ fn get_file() -> PathBuf {
         .collect();
 
     for file in &files {
-        println!("{}: {}", count, file.display());
+        println!("{}: {}", count, file.strip_prefix("./").unwrap().display());
         count += 1;
     }
 
@@ -120,14 +94,50 @@ fn get_file() -> PathBuf {
 }
 
 fn main() {
+    // For debug purposes. Ignore.
+    if DEBUG {
+        env::set_current_dir("./src").expect("Something went wrong");
+    }
+    let mut config = Ini::new();
+    // If first time using the app, scan the directory, and
+    // add all currently existing files and their categories
+    // to the config file.
+    if !path::Path::new("./menu_sorter.ini").exists() {
+        fs::File::create("./menu_sorter.ini").unwrap();
+        fs::write("./menu_sorter.ini", "[files]").expect("Unable to write");
+        init_scan(&mut config);
+    }
+
+    let map = config.load("menu_sorter.ini").unwrap();
+    let file_list = map.get("files").unwrap();
+
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
         process::exit(1);
     }
 
+    // bool to check if the file contains a category already
+    // if it does, that needs to be replaced w the new category (or not)
+    let mut file_contains_category = false;
+    let mut old_category = String::new();
+
     // get the user's file
     let user_file = get_file();
-    println!("User file: {:?}", user_file);
+    let trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
+    let trimmed_user_file = &trimmed_user_file.to_string().to_lowercase();
+    println!("User file: {:?}", trimmed_user_file);
+    if file_list.contains_key(trimmed_user_file) {
+        old_category = file_list
+            .get(trimmed_user_file)
+            .unwrap()
+            .to_owned()
+            .unwrap(); // kill me
+        println!(
+            "{:?} with category {} found.",
+            trimmed_user_file, old_category
+        );
+        file_contains_category = true;
+    }
 
     let path = path::Path::new(&user_file);
 
@@ -149,7 +159,23 @@ fn main() {
     // When adding to a category, category is always added right after 'Mods.'
     // The sequence is unique, so we can use it to find the line we want to edit.
     let sequence = "Mods.";
-    let rep = format!("{}{}.", sequence, category);
+    let rep_with = format!("{}{}.", sequence, category);
+    let mut rep_from = String::new();
+    if file_contains_category {
+        rep_from = format!("{}{}.", sequence, old_category);
+        // if the old and new category are the same, no changes needed.
+        if rep_from == rep_with {
+            println!("Category already exists. No changes needed. Exiting.");
+            process::exit(0);
+        }
+        // otherwise, updated the config file.
+        else {
+            config.set("files", trimmed_user_file, Some(category));
+            config
+                .write("menu_sorter.ini")
+                .expect("Unable to write to file");
+        }
+    }
 
     // We'll write to a temp file, then overwrite the original file with the temp file.
     let tmp_path = format!("{}.tmp", path.display());
@@ -160,7 +186,13 @@ fn main() {
 
     for line in file.lines() {
         let line = line.expect("Unable to read line");
-        let mut new_line = line.replace(sequence, &rep);
+        // let mut new_line = line.replace(sequence, &rep_with);
+        let mut new_line = String::new();
+        if file_contains_category {
+            new_line = line.replace(&rep_from, &rep_with);
+        } else {
+            new_line = line.replace(sequence, &rep_with);
+        }
         new_line.push('\n'); // new line char gets removed for some reason? not sure why.
         tmp_file
             .write_all(new_line.as_bytes())
@@ -168,4 +200,5 @@ fn main() {
     }
     // Rename tmp file to permanent file later.
     fs::rename(format!("{}.tmp", path.display()), path).expect("Unable to rename temp file");
+    println!("All done, exiting cleanly.");
 }

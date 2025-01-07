@@ -2,3 +2,5 @@
 *.xml
 *.tmp
 .vscode
+run.ps1
+*.ini
