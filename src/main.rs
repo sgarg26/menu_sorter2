@@ -4,7 +4,7 @@ use std::{env, fs, path, process};
 
 use colored::Colorize;
 use configparser::ini::Ini;
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
 use menu_sorter::init_scan;
 
@@ -70,7 +70,7 @@ fn get_file() -> PathBuf {
         .collect();
 
     for file in &files {
-        println!("{}: {}", count, file.display());
+        println!("{}: {}", count, file.strip_prefix("./").unwrap().display());
         count += 1;
     }
 
@@ -93,26 +93,19 @@ fn get_file() -> PathBuf {
     }
 }
 
-//    let mut config = Ini::new();
-//    let map = config.load("src/config.ini").unwrap();
-//
-//    // for (key, value) in map.iter() {
-//    //     println!("{}: {:?}", key, value);
-//    // }
-//
-//    let val = map.get("file").unwrap();
-//    // println!("{:?}", val.get("autohide.xml").unwrap());
-//
-//    for (k, v) in val.iter() {
-//        println!("{}: {:?}", k, v);
-//    }
-
 fn main() {
     let mut config = Ini::new();
+    // If first time using the app, scan the directory, and
+    // add all currently existing files and their categories
+    // to the config file.
     if !path::Path::new("./menu_sorter.ini").exists() {
         fs::File::create("./menu_sorter.ini").unwrap();
+        fs::write("./menu_sorter.ini", "[files]").expect("Unable to write");
         init_scan(&mut config);
     }
+
+    let map = config.load("menu_sorter.ini").unwrap();
+    let file_list = map.get("files").unwrap();
 
     // first check if we're currently in the ../../The Witcher 3/../pc dir
     if !DEBUG && !check_cwd() {
@@ -121,7 +114,11 @@ fn main() {
 
     // get the user's file
     let user_file = get_file();
+    let trimmed_user_file = user_file.strip_prefix("./").unwrap().to_str().unwrap();
     println!("User file: {:?}", user_file);
+    if file_list.contains_key(trimmed_user_file) {
+        println!("{:?} with category {:?} found.", user_file, map.get(trimmed_user_file).unwrap());
+    }
 
     let path = path::Path::new(&user_file);
 
