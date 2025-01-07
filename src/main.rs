@@ -94,7 +94,10 @@ fn get_file() -> PathBuf {
 }
 
 fn main() {
-    if DEBUG { env::set_current_dir("./src").expect("Something went wrong"); }
+    // For debug purposes. Ignore.
+    if DEBUG {
+        env::set_current_dir("./src").expect("Something went wrong");
+    }
     let mut config = Ini::new();
     // If first time using the app, scan the directory, and
     // add all currently existing files and their categories
@@ -160,9 +163,17 @@ fn main() {
     let mut rep_from = String::new();
     if file_contains_category {
         rep_from = format!("{}{}.", sequence, old_category);
+        // if the old and new category are the same, no changes needed.
         if rep_from == rep_with {
             println!("Category already exists. No changes needed. Exiting.");
             process::exit(0);
+        }
+        // otherwise, updated the config file.
+        else {
+            config.set("files", trimmed_user_file, Some(category));
+            config
+                .write("menu_sorter.ini")
+                .expect("Unable to write to file");
         }
     }
 
@@ -175,7 +186,13 @@ fn main() {
 
     for line in file.lines() {
         let line = line.expect("Unable to read line");
-        let mut new_line = line.replace(sequence, &rep_with);
+        // let mut new_line = line.replace(sequence, &rep_with);
+        let mut new_line = String::new();
+        if file_contains_category {
+            new_line = line.replace(&rep_from, &rep_with);
+        } else {
+            new_line = line.replace(sequence, &rep_with);
+        }
         new_line.push('\n'); // new line char gets removed for some reason? not sure why.
         tmp_file
             .write_all(new_line.as_bytes())
@@ -183,4 +200,5 @@ fn main() {
     }
     // Rename tmp file to permanent file later.
     fs::rename(format!("{}.tmp", path.display()), path).expect("Unable to rename temp file");
+    println!("All done, exiting cleanly.");
 }
